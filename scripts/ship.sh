@@ -4,4 +4,4 @@ set -e
 
 git pull --rebase
 ./scripts/test.sh
-git push origin head
+git push
