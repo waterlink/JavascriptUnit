@@ -144,7 +144,7 @@ require("/path/to/JavascriptUnit").addTestSuite(function ExampleTest(t) {
 
 ## TODO
 
-- [ ] Unit-test test-failure handling code.
+- [x] Unit-test test-failure handling code.
 - [ ] Compatibility with browser.
 - [ ] Test-drive any serious Kata with it.
 - [ ] Release on npm?
