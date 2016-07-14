@@ -53,17 +53,43 @@ Error: Expected to equal Buzz but got: 5
 
 Fails if `condition` is falsey. Uses `message` as an error message if provided.
 
+Example:
+
+```javascript
+assertTrue(acme.isItLeanEnough());
+assertTrue(acme.isItLeanEnough(), "acme should be lean enough");
+```
+
 ### `assertFalse(condition, [message])`
 
 Fails if `condition` is truthy. Uses `message` as an error message if provided.
+
+Example:
+
+```javascript
+assertFalse(acme.isItLeanEnough());
+assertFalse(acme.isItLeanEnough(), "acme should not be lean enough");
+```
 
 ### `assertEqual(expected, actual)`
 
 Fails if `expected !== actual`.
 
+Example:
+
+```javascript
+assertEqual(42, getAnswerOfTheUniverse());
+```
+
 ### `assertNotEqual(expected, actual)`
 
 Fails if `expected === actual`.
+
+Example:
+
+```javascript
+assertNotEqual("invalid value", getTheValue());
+```
 
 ### `assertThrows(expectedMessage, func)`
 
@@ -71,6 +97,14 @@ Calls `func()` and asserts, that:
 
 1. `func()` threw an exception.
 2. Error message was exactly `expectedMessage`.
+
+Example:
+
+```javascript
+assertThrows("Unable to reach the server", function () {
+    connectToServer();
+});
+```
 
 ## Setup & Teardown
 
