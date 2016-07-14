@@ -1,20 +1,16 @@
 const writeSync = require("fs").writeSync;
 
-global.JavascriptUnitGlobals = {
-    failed: 0,
-    passed: 0,
-    total: 0
-};
-
-module.exports = function () {
+function JavascriptUnit(process, stats, errorFactory) {
     this.DEFAULT_ASSERT_TRUE_MESSAGE = "Expected condition to be true, got false";
     this.DEFAULT_ASSERT_FALSE_MESSAGE = "Expected condition to be false, got true";
+
+    this.stats = stats;
 
     this.assertTrue = function (condition, errorMessage) {
         errorMessage = errorMessage || this.DEFAULT_ASSERT_TRUE_MESSAGE;
 
         if (!condition) {
-            throw new Error(errorMessage);
+            throw errorFactory.createError(errorMessage);
         }
     };
 
@@ -44,6 +40,32 @@ module.exports = function () {
         );
     };
 
+    this.assertJSONEqual = function (expected, actual) {
+        var stringifiedExpected = JSON.stringify(expected);
+        var stringifiedActual = JSON.stringify(actual);
+
+        this.assertTrue(
+            stringifiedExpected === stringifiedActual,
+            "Expected to equal (as JSON) "
+            + stringifiedExpected
+            + " but got: "
+            + stringifiedActual
+        );
+    };
+
+    this.assertNotJSONEqual = function (expected, actual) {
+        var stringifiedExpected = JSON.stringify(expected);
+        var stringifiedActual = JSON.stringify(actual);
+
+        this.assertTrue(
+            stringifiedExpected !== stringifiedActual,
+            "Expected not to equal (as JSON) "
+            + stringifiedExpected
+            + " but got: "
+            + stringifiedActual
+        );
+    };
+
     this.assertThrows = function (expectedMessage, func) {
         var threw = true;
 
@@ -52,31 +74,35 @@ module.exports = function () {
             threw = false;
         } catch (error) {
             if (error.message != expectedMessage) {
-                throw new Error("Expected error message '"
+                throw errorFactory.createError("Expected error message '"
                     + expectedMessage + "', but was: '" + error.message + "'");
             }
         }
 
         if (!threw) {
-            throw new Error("Expected error message '"
+            throw errorFactory.createError("Expected error message '"
                 + expectedMessage + "', but no error have been thrown");
         }
     };
 
     this.log = function (message) {
-        process.stdout.write(message + "\n");
+        process.log(message);
     };
 
     this.error = function (message) {
-        process.stderr.write(message + "\n");
+        process.error(message);
     };
-};
+}
+
+if (typeof module !== "undefined") {
+    module.exports = JavascriptUnit;
+}
 
 function report(t) {
     t.log(
         "\n"
-        + JavascriptUnitGlobals.passed + " tests passed, "
-        + JavascriptUnitGlobals.failed + " failed."
+        + t.stats.passed + " tests passed, "
+        + t.stats.failed + " failed."
     );
 }
 
@@ -91,12 +117,12 @@ function logTestFailure(t, name, error) {
 }
 
 function recordTestFailure(t, name, error) {
-    JavascriptUnitGlobals.failed += 1;
+    t.stats.failed += 1;
     logTestFailure(t, name, error);
 }
 
-function finalizeTestRun() {
-    if (JavascriptUnitGlobals.failed > 0) {
+function finalizeTestRun(t, process) {
+    if (t.stats.failed > 0) {
         process.exit(1);
     }
 }
@@ -106,12 +132,12 @@ function logTestPass(t, name) {
 }
 
 function recordTestPass(t, name) {
-    JavascriptUnitGlobals.passed += 1;
+    t.stats.passed += 1;
     logTestPass(t, name);
 }
 
-function recordTestStart() {
-    JavascriptUnitGlobals.total += 1;
+function recordTestStart(t) {
+    t.stats.total += 1;
 }
 
 function runSetup(testSuite) {
@@ -123,7 +149,7 @@ function runTeardown(testSuite) {
 }
 
 function processTest(testSuite, name, t) {
-    recordTestStart();
+    recordTestStart(t);
 
     try {
         runSetup(testSuite);
@@ -155,10 +181,45 @@ function runTestSuite(testSuiteConstructor, t) {
     }
 }
 
-module.exports.addTestSuite = function (testSuiteConstructor) {
-    var t = new module.exports();
+JavascriptUnit.addTestSuite = function (testSuiteConstructor, options) {
+    options = options || {};
+    var itsProcess = options.process || new NodeJSProcess();
+    var itsStats = options.stats || JavascriptUnitStats;
+    var itsErrorFactory = options.errorFactory || new StockErrorFactory();
+
+    var t = new JavascriptUnit(itsProcess, itsStats, itsErrorFactory);
 
     runTestSuite(testSuiteConstructor, t);
     report(t);
-    finalizeTestRun();
+    finalizeTestRun(t, itsProcess);
 };
+
+function NodeJSProcess() {
+    this.log = function (message) {
+        process.stdout.write(message + "\n");
+    };
+
+    this.error = function (message) {
+        process.stderr.write(message + "\n");
+    };
+
+    this.exit = function (exitCode) {
+        process.exit(exitCode);
+    }
+}
+
+function StockErrorFactory() {
+    this.createError = function (message) {
+        return new Error(message);
+    };
+}
+
+JavascriptUnit.createEmptyStats = function () {
+    return {
+        failed: 0,
+        passed: 0,
+        total: 0
+    };
+};
+
+global.JavascriptUnitStats = JavascriptUnit.createEmptyStats();

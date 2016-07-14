@@ -91,6 +91,26 @@ Example:
 assertNotEqual("invalid value", getTheValue());
 ```
 
+### `assertJSONEqual(expected, actual)`
+
+Fails if `JSON.stringify(expected) !== JSON.stringify(actual)`. Useful for comparing serialize-able data-structures.
+
+Example:
+
+```javascript
+assertJSONEqual({name: "John", hobby: "Open Source Contributor"}, getUser());
+```
+
+### `assertNotJSONEqual(expected, actual)`
+
+Fails if `JSON.stringify(expected) === JSON.stringify(actual)`. Useful for comparing serialize-able data-structures.
+
+Example:
+
+```javascript
+assertNotJSONEqual({name: "Sarah", hobby: "Electronic Music Composer"}, getUser());
+```
+
 ### `assertThrows(expectedMessage, func)`
 
 Calls `func()` and asserts, that:

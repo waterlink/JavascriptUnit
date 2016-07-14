@@ -57,6 +57,36 @@ JavascriptUnit.addTestSuite(function JavascriptUnitTest(t) {
         });
     };
 
+    this.testAssertJSONEqual_withNoFailure = function () {
+        t.assertJSONEqual({one: 1, two: 2}, {one: 1, two: 2});
+    };
+
+    this.testAssertJSONEqual_withFailure = function () {
+        var expectedMessage = "Expected to equal (as JSON) " +
+            "{\"one\":1,\"two\":2}" +
+            " but got: " +
+            "{\"one\":2,\"two\":1}";
+
+        t.assertThrows(expectedMessage, function () {
+            t.assertJSONEqual({one: 1, two: 2}, {one: 2, two: 1})
+        });
+    };
+
+    this.testAssertNotJSONEqual_withNoFailure = function () {
+        t.assertNotJSONEqual({one: 1, two: 2}, {one: 2, two: 1});
+    };
+
+    this.testAssertNotJSONEqual_withFailure = function () {
+        var expectedMessage = "Expected not to equal (as JSON) " +
+            "{\"one\":1,\"two\":2}" +
+            " but got: " +
+            "{\"one\":1,\"two\":2}";
+
+        t.assertThrows(expectedMessage, function () {
+            t.assertNotJSONEqual({one: 1, two: 2}, {one: 1, two: 2})
+        });
+    };
+
     this.testAssertThrows_withNoFailure = function () {
         var expectedMessage = "an expected error message";
 
